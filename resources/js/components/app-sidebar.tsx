@@ -1,13 +1,52 @@
-import { BookOpen, Folder, LayoutGrid, Users, Tags, Sprout, Leaf, UserRound, GraduationCap, UsersRound, Activity, Award, AlertTriangle, Rat, Worm, WormIcon, Ruler, ClipboardList, FileCheck, HandCoinsIcon, Wallet, Layers, MapPin, CheckSquare, Truck, Scale, FileText, FolderOpen, FlaskConical, Shield, ClipboardCheck, Key, Calendar, Star, Trophy } from 'lucide-react';
+import {
+    LayoutGrid,
+    Users,
+    Tags,
+    Sprout,
+    Leaf,
+    UserRound,
+    UsersRound,
+    Activity,
+    Award,
+    WormIcon,
+    Bug,
+    Ruler,
+    ClipboardList,
+    FileCheck,
+    HandCoinsIcon,
+    Wallet,
+    Layers,
+    CheckSquare,
+    Truck,
+    Scale,
+    FileText,
+    FolderOpen,
+    FlaskConical,
+    Shield,
+    ClipboardCheck,
+    Key,
+    Calendar,
+    Star,
+    Trophy,
+    PanelLeftClose,
+    PanelLeftOpen,
+} from 'lucide-react';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import OfflineStatusIndicator from '@/components/offline-status-indicator';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarResizeHandle } from '@/components/ui/sidebar';
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarHeader,
+    useSidebar,
+} from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { type NavItem, type SharedData } from '@/types';
 import { Link, usePage, router } from '@inertiajs/react';
 import { useEffect, useRef } from 'react';
-import AppLogo from './app-logo';
 
 export interface NavGroup {
     title: string;
@@ -16,6 +55,8 @@ export interface NavGroup {
 
 export function AppSidebar() {
     const { auth } = usePage<SharedData>().props;
+    const { state, toggleSidebar } = useSidebar();
+    const isCollapsed = state === 'collapsed';
     const isSuperAdmin = auth.user.role?.name === 'super admin';
     const isAdmin = auth.user.role?.name === 'admin';
     const scrollAreaContainerRef = useRef<HTMLDivElement>(null);
@@ -24,7 +65,6 @@ export function AppSidebar() {
     // Helper to get the viewport element
     const getViewport = () => {
         if (!scrollAreaContainerRef.current) return null;
-        // The viewport is the direct child of the ScrollArea root with data attribute
         return scrollAreaContainerRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
     };
 
@@ -34,7 +74,6 @@ export function AppSidebar() {
         if (savedPosition) {
             const scrollTop = parseInt(savedPosition, 10);
             if (!isNaN(scrollTop)) {
-                // Use setTimeout to ensure the DOM is ready
                 setTimeout(() => {
                     const viewport = getViewport();
                     if (viewport) {
@@ -49,14 +88,10 @@ export function AppSidebar() {
         const handleScroll = () => {
             const viewport = getViewport();
             if (viewport) {
-                sessionStorage.setItem(
-                    SCROLL_STORAGE_KEY,
-                    viewport.scrollTop.toString()
-                );
+                sessionStorage.setItem(SCROLL_STORAGE_KEY, viewport.scrollTop.toString());
             }
         };
 
-        // Wait for component to mount, then attach scroll listener
         const timeoutId = setTimeout(() => {
             const viewport = getViewport();
             if (viewport) {
@@ -64,14 +99,10 @@ export function AppSidebar() {
             }
         }, 0);
 
-        // Listen to Inertia navigation start event
         const unsubscribe = router.on('start', () => {
             const viewport = getViewport();
             if (viewport) {
-                sessionStorage.setItem(
-                    SCROLL_STORAGE_KEY,
-                    viewport.scrollTop.toString()
-                );
+                sessionStorage.setItem(SCROLL_STORAGE_KEY, viewport.scrollTop.toString());
             }
         });
 
@@ -85,11 +116,11 @@ export function AppSidebar() {
         };
     }, []);
 
-    const navGroups = [
+    const navGroups: NavGroup[] = [
         {
             title: 'Main',
             items: [
-                { 
+                {
                     title: 'Dashboard',
                     url: '/dashboard',
                     icon: LayoutGrid,
@@ -99,27 +130,6 @@ export function AppSidebar() {
     ];
 
     if (isAdmin) {
-        // navGroups.push({
-        //     title: 'Crop Libary',
-        //     items: [
-        //         {
-        //             title: 'Categories',
-        //             url: '/admin/categories',
-        //             icon: Tags,
-        //         },
-        //         {
-        //             title: 'Commodities',
-        //             url: '/admin/commodities',
-        //             icon: Sprout,
-        //         },
-        //         {
-        //             title: 'Varieties',
-        //             url: '/admin/varieties',
-        //             icon: Leaf,
-        //         },
-        //     ],
-        // });
-
         navGroups.push({
             title: 'Farmer Records',
             items: [
@@ -136,66 +146,20 @@ export function AppSidebar() {
             ],
         });
 
-         navGroups.push({
+        navGroups.push({
             title: 'Programs & Assistance',
             items: [
-                //  {
-                //     title: 'Programs',
-                //     url: '/admin/programs',
-                //     icon: HandCoinsIcon,
-                // },
-                // {
-                //     title: 'Funding Sources',
-                //     url: '/admin/funding-sources',
-                //     icon: Wallet,
-                // },
-                // {
-                //     title: 'Assistance Categories',
-                //     url: '/admin/assistance-categories',
-                //     icon: Layers,
-                // },
-                // {
-                //     title: 'Allocation Types',
-                //     url: '/admin/allocation-types',
-                //     icon: ClipboardList,
-                // },
-                // {
-                //     title: 'Eligible Barangays',
-                //     url: '/admin/eligible-barangays',
-                //     icon: MapPin,
-                // },
-                // {
-                //     title: 'Eligibility Rules',
-                //     url: '/admin/eligibility-rules',
-                //     icon: CheckSquare,
-                // },
                 {
                     title: 'Distribution Records',
                     url: '/admin/distribution-records',
                     icon: Truck,
                 },
-                // {
-                //     title: 'Allocation Policies',
-                //     url: '/admin/allocation-policies',
-                //     icon: Scale,
-                // },
-               
             ],
         });
 
         navGroups.push({
             title: 'Damage Logs',
             items: [
-                // {
-                //     title: 'Damage Categories',
-                //     url: '/admin/damage-categories',
-                //     icon: WormIcon,
-                // },
-                // {
-                //     title: 'Damage Types',
-                //     url: '/admin/damage-types',
-                //     icon: Rat,
-                // },
                 {
                     title: 'Crop Damage Records',
                     url: '/admin/crop-damage-records',
@@ -208,11 +172,6 @@ export function AppSidebar() {
         navGroups.push({
             title: 'Crop Monitoring',
             items: [
-                // {
-                //     title: 'Monitoring Categories',
-                //     url: '/admin/monitoring-categories',
-                //     icon: Tags,
-                // },
                 {
                     title: 'Monitoring Folders',
                     url: '/admin/monitoring-folders',
@@ -269,29 +228,6 @@ export function AppSidebar() {
                 },
             ],
         });
-
-       
-
-        // navGroups.push({
-        //     title: 'Supporting Infrastructure',
-        //     items: [
-        //         {
-        //             title: 'Organizations',
-        //             url: '/admin/organizations',
-        //             icon: UsersRound,
-        //         },
-        //         {
-        //             title: 'Unit of Measures',
-        //             url: '/admin/unit-of-measures',
-        //             icon: Ruler,
-        //         },
-        //         {
-        //             title: 'Farmer Eligibilities',
-        //             url: '/admin/farmer-eligibilities',
-        //             icon: FileCheck,
-        //         },
-        //     ],
-        // });
     }
 
     if (isSuperAdmin) {
@@ -368,7 +304,7 @@ export function AppSidebar() {
                 {
                     title: 'Damage Types',
                     url: '/super-admin/damage-types',
-                    icon: Rat,
+                    icon: Bug,
                 },
             ],
         });
@@ -443,57 +379,84 @@ export function AppSidebar() {
         });
     }
 
-    const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        url: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        url: 'https://laravel.com/docs/starter-kits',
-        icon: BookOpen,
-    },
-];
-
     return (
-        <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <Link href="/dashboard" prefetch>
-                                <AppLogo />
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
+        <Sidebar className="border-r border-sidebar-border bg-sidebar">
+            <SidebarHeader className="h-16 border-b border-sidebar-border px-3 flex justify-center">
+                {isCollapsed ? (
+                    <div className="flex w-full items-center justify-center">
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={toggleSidebar}
+                                    className="relative group h-10 w-10 text-muted-foreground hover:bg-sidebar-accent hover:text-foreground mx-auto flex items-center justify-center rounded-lg"
+                                    aria-label="Expand sidebar"
+                                >
+                                    <img
+                                        src="/agroprofiler_logo.png"
+                                        alt="AgroProfiler"
+                                        className="h-7 w-7 rounded-md object-contain transition-opacity group-hover:opacity-0"
+                                    />
+                                    <PanelLeftOpen className="h-5 w-5 absolute opacity-0 transition-opacity group-hover:opacity-100 text-primary" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">Expand sidebar</TooltipContent>
+                        </Tooltip>
+                    </div>
+                ) : (
+                    <div className="flex w-full items-center justify-between gap-2 min-w-0 px-1">
+                        <Link href="/dashboard" prefetch className="flex items-center gap-3 min-w-0">
+                            <img
+                                src="/agroprofiler_logo.png"
+                                alt="AgroProfiler"
+                                className="h-8 w-8 shrink-0 rounded-lg object-contain shadow-xs"
+                            />
+                            <div className="flex flex-col min-w-0">
+                                <span className="text-sm font-bold tracking-tight text-foreground truncate">
+                                    AgroProfiler
+                                </span>
+                                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">
+                                    {isSuperAdmin ? 'Super Admin' : isAdmin ? 'Admin Panel' : 'Dashboard'}
+                                </span>
+                            </div>
+                        </Link>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={toggleSidebar}
+                                    className="h-8 w-8 shrink-0 text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+                                    aria-label="Collapse sidebar"
+                                >
+                                    <PanelLeftClose className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">Collapse sidebar</TooltipContent>
+                        </Tooltip>
+                    </div>
+                )}
             </SidebarHeader>
 
-            {/* The same ScrollArea is used in every state: swapping containers on collapse
-                remounted every nav item and threw away the restored scroll position. */}
-            <SidebarContent className="overflow-hidden">
+            <SidebarContent className={isCollapsed ? 'px-1 py-2' : 'px-2 py-3'}>
                 <ScrollArea className="h-full" ref={scrollAreaContainerRef}>
-                    {navGroups.map((group) => (
-                        <NavMain key={group.title} title={group.title} items={group.items} />
-                    ))}
+                    <div className="flex flex-col gap-1 pb-4">
+                        {navGroups.map((group) => (
+                            <NavMain key={group.title} title={group.title} items={group.items} />
+                        ))}
+                    </div>
                 </ScrollArea>
             </SidebarContent>
 
-            <SidebarFooter>
-                {/* Collapses with an animated grid row rather than `display:none`, which used to drop
-                    the footer's height in a single frame. `:has(>div:empty)` also removes the strip
-                    entirely while OfflineStatusIndicator renders nothing (online and fully synced),
-                    instead of leaving a bare border and padding above the user row. */}
-                <div className="grid grid-rows-[1fr] transition-[grid-template-rows,opacity] duration-[250ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-data-[collapsible=icon]:grid-rows-[0fr] group-data-[collapsible=icon]:opacity-0 motion-reduce:transition-none [&:has(>div:empty)]:hidden">
-                    <div className="min-h-0 overflow-hidden border-t px-4 py-2">
+            <SidebarFooter className="border-t border-sidebar-border p-2">
+                {!isCollapsed && (
+                    <div className="mb-2 px-1 [&:has(>div:empty)]:hidden">
                         <OfflineStatusIndicator />
                     </div>
-                </div>
+                )}
                 <NavUser />
             </SidebarFooter>
-
-            <SidebarResizeHandle />
         </Sidebar>
     );
 }

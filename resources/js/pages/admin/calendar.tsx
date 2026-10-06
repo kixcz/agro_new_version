@@ -238,86 +238,148 @@ export default function Calendar({ events, stats, currentMonth, productivity }: 
 
                     {/* ─── Calendar Tab ─────────────────────────────────── */}
                     <TabsContent value="calendar" className="flex flex-col gap-5">
-                        <div className="glass-card rounded-2xl p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-semibold">
-                                    {monthNames[month]} {year}
-                                </h2>
-                                <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="icon" onClick={() => navigateMonth(-1)}>
-                                        <ChevronLeft className="h-4 w-4" />
-                                    </Button>
-                                    <Button variant="outline" size="sm" onClick={() => {
-                                        const today = new Date().toISOString().slice(0, 7);
-                                        router.get('/admin/calendar', { month: today });
-                                    }}>
+                        <div className="rounded-2xl border border-border/60 bg-card shadow-sm">
+                            {/* Calendar Navigation Bar */}
+                            <div className="flex items-center justify-between border-b border-border/60 px-5 py-3">
+                                <div className="flex items-center gap-3">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 rounded-lg px-3 text-sm font-medium"
+                                        onClick={() => {
+                                            const today = new Date().toISOString().slice(0, 7);
+                                            router.get('/admin/calendar', { month: today });
+                                        }}
+                                    >
                                         Today
                                     </Button>
-                                    <Button variant="outline" size="icon" onClick={() => navigateMonth(1)}>
-                                        <ChevronRight className="h-4 w-4" />
+                                    <div className="flex items-center gap-0.5">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 rounded-lg"
+                                            onClick={() => navigateMonth(-1)}
+                                        >
+                                            <ChevronLeft className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 rounded-lg"
+                                            onClick={() => navigateMonth(1)}
+                                        >
+                                            <ChevronRight className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                    <h2 className="text-lg font-semibold tracking-tight">
+                                        {monthNames[month]} {year}
+                                    </h2>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="flex items-center rounded-lg border border-border/60 bg-muted/30 p-0.5">
+                                        <span className="rounded-md bg-background px-3 py-1.5 text-sm font-medium shadow-sm">
+                                            Month
+                                        </span>
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        className="h-8 rounded-lg px-3 text-sm font-medium"
+                                        onClick={() => {
+                                            // TODO: Implement new event creation
+                                        }}
+                                    >
+                                        <span className="mr-1.5">+</span>
+                                        New event
                                     </Button>
                                 </div>
                             </div>
 
                             {/* Day Names Header */}
-                            <div className="grid grid-cols-7 gap-px mb-2">
+                            <div className="grid grid-cols-7 border-b border-border/60">
                                 {dayNames.map((day) => (
-                                    <div key={day} className="text-center text-sm font-semibold text-muted-foreground py-2">
+                                    <div
+                                        key={day}
+                                        className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                                    >
                                         {day}
                                     </div>
                                 ))}
                             </div>
 
                             {/* Calendar Grid */}
-                            <div className="grid grid-cols-7 gap-px">
-                                {calendarDays.map((day, index) => (
-                                    <div
-                                        key={index}
-                                        onClick={() => handleDateClick(day)}
-                                        className={`min-h-[100px] p-2 border rounded-lg cursor-pointer transition-all ${
-                                            day.currentMonth
-                                                ? 'bg-card hover:bg-accent/50'
-                                                : 'bg-muted/30 opacity-50'
-                                        } ${
-                                            day.isToday ? 'ring-2 ring-primary' : ''
-                                        }`}
-                                    >
-                                        <div className="flex items-center justify-between mb-1">
-                                            <span className={`text-sm font-medium ${
-                                                day.isToday
-                                                    ? 'bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center'
-                                                    : ''
-                                            }`}>
-                                                {day.date}
-                                            </span>
+                            <div className="grid grid-cols-7">
+                                {calendarDays.map((day, index) => {
+                                    const isCompleted = (event: CalendarEvent) =>
+                                        event.status === 'verified' || event.status === 'completed';
+                                    const isCancelled = (event: CalendarEvent) => event.status === 'rejected';
+                                    const maxVisibleEvents = 3;
+
+                                    return (
+                                        <div
+                                            key={index}
+                                            onClick={() => handleDateClick(day)}
+                                            className={`group relative min-h-[120px] border-b border-r border-border/60 p-2 transition-colors ${
+                                                day.currentMonth
+                                                    ? 'bg-card hover:bg-accent/30'
+                                                    : 'bg-muted/20'
+                                            } ${day.isToday ? 'bg-primary/5' : ''} ${
+                                                day.currentMonth ? 'cursor-pointer' : ''
+                                            }`}
+                                        >
+                                            {/* Date Number */}
+                                            <div className="mb-1.5 flex items-start justify-between">
+                                                <span
+                                                    className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-sm ${
+                                                        day.isToday
+                                                            ? 'bg-primary font-semibold text-primary-foreground'
+                                                            : day.currentMonth
+                                                            ? 'font-medium text-foreground'
+                                                            : 'text-muted-foreground/50'
+                                                    }`}
+                                                >
+                                                    {day.date}
+                                                </span>
+                                            </div>
+
+                                            {/* Events */}
                                             {day.currentMonth && day.events && day.events.length > 0 && (
-                                                <Badge variant="secondary" className="text-xs">
-                                                    {day.events.length}
-                                                </Badge>
+                                                <div className="space-y-1">
+                                                    {day.events.slice(0, maxVisibleEvents).map((event, idx) => {
+                                                        const strikethrough = isCompleted(event) || isCancelled(event);
+                                                        return (
+                                                            <div
+                                                                key={idx}
+                                                                className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs ${getStatusColor(event)} text-primary-foreground`}
+                                                                title={event.title}
+                                                            >
+                                                                {event.start_time && (
+                                                                    <span className="shrink-0 font-medium opacity-90">
+                                                                        {new Date(`2000-01-01T${event.start_time}`).toLocaleTimeString([], {
+                                                                            hour: 'numeric',
+                                                                            minute: '2-digit',
+                                                                        })}
+                                                                    </span>
+                                                                )}
+                                                                <span
+                                                                    className={`truncate ${
+                                                                        strikethrough ? 'line-through opacity-70' : ''
+                                                                    }`}
+                                                                >
+                                                                    {event.title}
+                                                                </span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                    {day.events.length > maxVisibleEvents && (
+                                                        <div className="px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                                                            +{day.events.length - maxVisibleEvents} more
+                                                        </div>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
-
-                                        {day.currentMonth && day.events && (
-                                            <div className="space-y-1">
-                                                {day.events.slice(0, 3).map((event, idx) => (
-                                                    <div
-                                                        key={idx}
-                                                        className={`text-xs p-1 rounded truncate ${getStatusColor(event)} text-primary-foreground`}
-                                                        title={event.title}
-                                                    >
-                                                        <span className="mr-1">{getTaskTypeIcon(event.task_type)}</span>
-                                                        {event.title}
-                                                    </div>
-                                                ))}
-                                                {day.events.length > 3 && (
-                                                    <div className="text-xs text-muted-foreground pl-1">
-                                                        +{day.events.length - 3} more
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     </TabsContent>
@@ -373,7 +435,7 @@ export default function Calendar({ events, stats, currentMonth, productivity }: 
                                 {productivity.task_type_dist.length > 0 && (
                                     <PieChart data={productivity.task_type_dist} title="By Task Type" />
                                 )}
-                                <LineChart data={productivity.daily_activity} title="Daily Task Volume" />
+                                <LineChart data={productivity.daily_activity.map(d => ({ month: d.name, count: d.count }))} title="Daily Task Volume" />
                             </div>
                         </div>
 

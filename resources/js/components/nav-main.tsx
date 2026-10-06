@@ -1,45 +1,75 @@
-import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { cn } from '@/lib/utils';
+import {
+    SidebarGroup,
+    SidebarGroupLabel,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    useSidebar,
+} from '@/components/ui/sidebar';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
+import { cn } from '@/lib/utils';
 
-export function NavMain({ title, items = [] }: { title?: string; items: NavItem[] }) {
-    const page = usePage();
-
-    const isActiveLink = (itemUrl: string) => {
-        return page.url === itemUrl || page.url.startsWith(itemUrl + '/');
-    };
+export function NavMain({ title, items }: { title: string; items: NavItem[] }) {
+    const { url } = usePage();
+    const { state } = useSidebar();
+    const isCollapsed = state === 'collapsed';
 
     return (
-        // Collapsed styling is driven entirely by the sidebar's data attributes so the markup
-        // stays identical in every state — no remounting of links while the panel animates.
-        // Padding and gaps stay constant: the buttons centre themselves on the rail, so there is
-        // nothing here that needs to move, and an un-transitioned gap change snapped every item
-        // to new spacing the instant the toggle was pressed.
-        <SidebarGroup className="px-2 py-0">
-            {title && <SidebarGroupLabel>{title}</SidebarGroupLabel>}
-            <SidebarMenu className="gap-1">
+        <SidebarGroup className="py-1">
+            <SidebarGroupLabel className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                {title}
+            </SidebarGroupLabel>
+            <SidebarMenu className="gap-0.5">
                 {items.map((item) => {
-                    const active = isActiveLink(item.url);
+                    const Icon = item.icon;
+                    const isActive = url === item.url || (item.url !== '/dashboard' && url.startsWith(item.url + '/'));
+
+                    if (isCollapsed) {
+                        return (
+                            <SidebarMenuItem key={item.title} className="flex justify-center">
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <SidebarMenuButton
+                                            asChild
+                                            isActive={isActive}
+                                            className={cn(
+                                                'h-9 w-9 mx-auto justify-center rounded-lg p-0 transition-colors',
+                                                isActive
+                                                    ? 'bg-primary/10 text-primary font-medium dark:bg-primary/20'
+                                                    : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground'
+                                            )}
+                                        >
+                                            <Link href={item.url} prefetch>
+                                                {Icon && <Icon className="h-4 w-4 shrink-0" />}
+                                                <span className="sr-only">{item.title}</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right" align="center">
+                                        {item.title}
+                                    </TooltipContent>
+                                </Tooltip>
+                            </SidebarMenuItem>
+                        );
+                    }
 
                     return (
                         <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton
                                 asChild
-                                isActive={active}
-                                tooltip={item.title}
+                                isActive={isActive}
                                 className={cn(
-                                    'rounded-lg',
-                                    active &&
-                                        // The active indicator is an inset shadow rather than a border so
-                                        // it never changes the item's box size mid-transition, and it is
-                                        // kept identical in both states so nothing repaints on toggle.
-                                        'bg-primary/10 font-semibold text-primary shadow-[inset_2px_0_0_0_currentcolor] dark:bg-primary/15',
+                                    'h-9 rounded-lg px-3 text-sm transition-colors',
+                                    isActive
+                                        ? 'bg-primary/10 text-primary font-medium dark:bg-primary/20'
+                                        : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground'
                                 )}
                             >
                                 <Link href={item.url} prefetch>
-                                    {item.icon && <item.icon className={active ? 'text-primary' : undefined} />}
-                                    <span>{item.title}</span>
+                                    {Icon && <Icon className="h-4 w-4 shrink-0" />}
+                                    <span className="truncate">{item.title}</span>
                                 </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
