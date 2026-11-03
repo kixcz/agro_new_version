@@ -5,12 +5,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { RealTimeNotifications } from '@/components/real-time-notifications';
+import { OfficeCalendarModal } from '@/components/office-calendar-modal';
 import { UserMenuContent } from '@/components/user-menu-content';
 import { useInitials } from '@/hooks/use-initials';
 import { type SharedData, getFullName } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { Search, MessageSquare, ChevronDown, Calendar } from 'lucide-react';
-import { Link } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem as BreadcrumbItemType } from '@/types';
@@ -19,8 +19,9 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
     const { auth } = usePage<SharedData>().props;
     const getInitials = useInitials();
     const fullName = getFullName(auth.user);
-    const isAdmin = auth.user.role?.name === 'admin';
+    const canViewOfficeCalendar = ['admin', 'super admin', 'technician'].includes(auth.user.role?.name ?? '');
     const [searchOpen, setSearchOpen] = useState(false);
+    const [calendarModalOpen, setCalendarModalOpen] = useState(false);
     const searchRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -40,48 +41,66 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
                 {/* Search Bar */}
                 <div className={cn(
                     'relative transition-all duration-300',
-                    searchOpen ? 'w-64' : 'w-9'
+                    searchOpen ? 'w-72' : 'w-9 md:w-64'
                 )}>
-                    {searchOpen ? (
-                        <div className="flex items-center rounded-xl border bg-background shadow-xs">
-                            <Search className="ml-3 h-4 w-4 shrink-0 text-muted-foreground" />
-                            <input
-                                ref={searchRef}
-                                type="text"
-                                placeholder="Search anything..."
-                                className="h-9 w-full bg-transparent px-3 text-sm outline-none placeholder:text-muted-foreground"
-                                onBlur={() => setSearchOpen(false)}
-                            />
-                            <kbd className="mr-2 rounded-md border bg-muted/50 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">ESC</kbd>
-                        </div>
-                    ) : (
-                        <button
-                            type="button"
-                            onClick={() => setSearchOpen(true)}
-                            className="flex h-9 w-9 items-center justify-center rounded-xl border border-transparent transition-colors hover:bg-muted"
-                        >
-                            <Search className="h-4 w-4" />
-                        </button>
-                    )}
+                    <div className="hidden md:flex items-center rounded-full border border-border/80 bg-muted/30 px-3 shadow-2xs transition-colors focus-within:border-emerald-600 focus-within:bg-background">
+                        <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <input
+                            ref={searchRef}
+                            type="text"
+                            placeholder="Search farmers, parcels, or reports..."
+                            className="h-9 w-full bg-transparent px-2.5 text-xs outline-none placeholder:text-muted-foreground"
+                        />
+                    </div>
+                    <div className="md:hidden">
+                        {searchOpen ? (
+                            <div className="flex items-center rounded-full border bg-background px-3 shadow-xs">
+                                <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                <input
+                                    type="text"
+                                    placeholder="Search farmers, parcels, or reports..."
+                                    className="h-9 w-full bg-transparent px-2 text-xs outline-none placeholder:text-muted-foreground"
+                                    onBlur={() => setSearchOpen(false)}
+                                />
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => setSearchOpen(true)}
+                                className="flex h-9 w-9 items-center justify-center rounded-full border border-transparent transition-colors hover:bg-muted"
+                            >
+                                <Search className="h-4 w-4" />
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Action Icons Container */}
                 <div className="flex items-center gap-1 rounded-xl border px-1.5 py-1">
-                    {/* Activity Calendar - Admin only */}
-                    {isAdmin && (
-                        <TooltipProvider delayDuration={0}>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Link
-                                        href="/admin/calendar"
-                                        className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-muted"
-                                    >
-                                        <Calendar className="h-4 w-4" />
-                                    </Link>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Activity Calendar</p></TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
+                    {/* Quick-Access Office Activity Calendar Modal */}
+                    {canViewOfficeCalendar && (
+                        <>
+                            <TooltipProvider delayDuration={0}>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button
+                                            type="button"
+                                            onClick={() => setCalendarModalOpen(true)}
+                                            className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-muted"
+                                            aria-label="Open Office Activity Calendar"
+                                        >
+                                            <Calendar className="h-4 w-4" />
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent><p>Office Activity Calendar</p></TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+
+                            <OfficeCalendarModal
+                                open={calendarModalOpen}
+                                onOpenChange={setCalendarModalOpen}
+                            />
+                        </>
                     )}
 
                     {/* Messages */}

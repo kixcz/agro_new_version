@@ -71,6 +71,20 @@ export interface PointsSummaryData {
   category_breakdown: ChartDataPoint[];
 }
 
+export interface FarmAreaTrendPoint {
+  year: string;
+  area: number;
+}
+
+export interface RecentActivityItem {
+  id: string;
+  type: 'farmer' | 'parcel' | 'monitoring' | string;
+  title: string;
+  subtitle: string;
+  time: string;
+  timestamp: number;
+}
+
 export interface AnalyticsData {
   kpis: KpiData;
   demographics: DemographicsData;
@@ -86,6 +100,9 @@ export interface AnalyticsData {
     count: number;
   }>;
   points_summary: PointsSummaryData;
+  farmers_by_program?: ChartDataPoint[];
+  farm_area_trend?: FarmAreaTrendPoint[];
+  recent_activities?: RecentActivityItem[];
   last_synced_at: string | null;
   date_range: { start: string; end: string } | null;
 }

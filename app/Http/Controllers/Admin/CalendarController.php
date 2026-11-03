@@ -3,8 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Announcement;
+use App\Models\CropDamageRecord;
+use App\Models\CropMonitoringItem;
+use App\Models\DistributionRecord;
 use App\Models\Task;
 use App\Models\TechnicianReport;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -163,6 +168,191 @@ class CalendarController extends Controller
                 'daily_activity' => $dailyActivity,
                 'completion_rate' => $completionRate,
                 'narrative' => $narrative,
+            ],
+        ]);
+    }
+
+    /**
+     * Return all office activities for the quick-access header calendar modal.
+     */
+    public function events(Request $request): JsonResponse
+    {
+        $month = $request->get('month', now()->format('Y-m'));
+        try {
+            $startDate = \Carbon\Carbon::parse($month . '-01')->startOfMonth();
+        } catch (\Throwable $e) {
+            $startDate = now()->startOfMonth();
+            $month = $startDate->format('Y-m');
+        }
+        $endDate = $startDate->copy()->endOfMonth();
+
+        $events = collect();
+
+        // 1. Scheduled Tasks
+        $tasks = Task::with(['assignedTo'])
+            ->whereBetween('due_date', [$startDate, $endDate])
+            ->get()
+            ->map(function ($task) {
+                return [
+                    'uid' => 'task-' . $task->id,
+                    'id' => $task->id,
+                    'title' => $task->title,
+                    'subtitle' => ucfirst(str_replace('_', ' ', $task->task_type ?? 'Field Task')),
+                    'category' => 'task',
+                    'category_label' => 'Field Task',
+                    'status' => $task->status ?? 'pending',
+                    'priority' => $task->priority ?? 'normal',
+                    'date' => $task->due_date ? $task->due_date->format('Y-m-d') : now()->format('Y-m-d'),
+                    'time' => null,
+                    'actor' => $task->assignedTo->full_name ?? 'Unassigned',
+                    'url' => '/admin/tasks/' . $task->id,
+                ];
+            });
+        $events = $events->concat($tasks);
+
+        // 2. Technician Reports
+        $reports = TechnicianReport::with(['technician'])
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->get()
+            ->map(function ($report) {
+                return [
+                    'uid' => 'report-' . $report->id,
+                    'id' => $report->id,
+                    'title' => ucfirst(str_replace('_', ' ', $report->report_type ?? 'Field')) . ' Report',
+                    'subtitle' => 'Technician Field Submission',
+                    'category' => 'report',
+                    'category_label' => 'Technician Report',
+                    'status' => $report->status ?? 'submitted',
+                    'priority' => 'normal',
+                    'date' => $report->created_at ? $report->created_at->format('Y-m-d') : now()->format('Y-m-d'),
+                    'time' => $report->created_at ? $report->created_at->format('h:i A') : null,
+                    'actor' => $report->technician->full_name ?? 'Field Technician',
+                    'url' => '/admin/technician-reports/' . $report->id,
+                ];
+            });
+        $events = $events->concat($reports);
+
+        // 3. Distribution Records (Program Allocations / Releases)
+        $distributions = DistributionRecord::with(['allocationType'])
+            ->whereBetween('release_date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->get()
+            ->map(function ($dist) {
+                return [
+                    'uid' => 'distribution-' . $dist->id,
+                    'id' => $dist->id,
+                    'title' => $dist->distribution_name ?: 'Input Distribution Release',
+                    'subtitle' => ($dist->allocationType?->name ?? 'Allocation') . ' • Qty: ' . number_format((float) $dist->total_quantity, 2),
+                    'category' => 'distribution',
+                    'category_label' => 'Distribution',
+                    'status' => 'released',
+                    'priority' => 'normal',
+                    'date' => $dist->release_date ? $dist->release_date->format('Y-m-d') : now()->format('Y-m-d'),
+                    'time' => null,
+                    'actor' => ucfirst($dist->source_type ?? 'Office'),
+                    'url' => '/admin/distribution-records/' . $dist->id . '/items',
+                ];
+            });
+        $events = $events->concat($distributions);
+
+        // 4. Crop Monitoring Entries
+        $monitoringItems = CropMonitoringItem::with(['folder.commodity', 'updater'])
+            ->where(function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('observation_date', [$startDate, $endDate])
+                  ->orWhere(function ($q2) use ($startDate, $endDate) {
+                      $q2->whereNull('observation_date')
+                         ->whereBetween('created_at', [$startDate, $endDate]);
+                  });
+            })
+            ->get()
+            ->map(function ($item) {
+                $obsDate = $item->observation_date ?? $item->created_at;
+                $commodityName = $item->folder?->commodity?->name;
+                $folderName = $item->folder?->folder_name ?? 'Crop Monitoring';
+                return [
+                    'uid' => 'monitoring-' . $item->crop_monitoring_item_id,
+                    'id' => $item->crop_monitoring_item_id,
+                    'title' => $item->item_name ?: 'Crop Monitoring Inspection',
+                    'subtitle' => $commodityName ? "{$folderName} ({$commodityName})" : $folderName,
+                    'category' => 'monitoring',
+                    'category_label' => 'Crop Monitoring',
+                    'status' => 'logged',
+                    'priority' => 'normal',
+                    'date' => $obsDate ? $obsDate->format('Y-m-d') : now()->format('Y-m-d'),
+                    'time' => $obsDate ? $obsDate->format('h:i A') : null,
+                    'actor' => $item->updater?->full_name ?? 'Office Staff',
+                    'url' => $item->folder_id ? '/admin/monitoring-folders/' . $item->folder_id : '/admin/monitoring-folders',
+                ];
+            });
+        $events = $events->concat($monitoringItems);
+
+        // 5. Crop Damage Records
+        $damageRecords = CropDamageRecord::withCount('items')
+            ->whereBetween('recorded_date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->get()
+            ->map(function ($dmg) {
+                return [
+                    'uid' => 'damage-' . $dmg->crop_damage_record_id,
+                    'id' => $dmg->crop_damage_record_id,
+                    'title' => $dmg->name ?: 'Crop Damage Assessment',
+                    'subtitle' => ($dmg->items_count ?? 0) . ' affected farm record(s)',
+                    'category' => 'damage',
+                    'category_label' => 'Crop Damage',
+                    'status' => 'recorded',
+                    'priority' => 'high',
+                    'date' => $dmg->recorded_date ? $dmg->recorded_date->format('Y-m-d') : now()->format('Y-m-d'),
+                    'time' => null,
+                    'actor' => 'Damage Assessment Team',
+                    'url' => '/admin/crop-damage-records/' . $dmg->crop_damage_record_id,
+                ];
+            });
+        $events = $events->concat($damageRecords);
+
+        // 6. Office Announcements
+        $announcements = Announcement::with(['creator'])
+            ->where(function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('published_at', [$startDate, $endDate])
+                  ->orWhere(function ($q2) use ($startDate, $endDate) {
+                      $q2->whereNull('published_at')
+                         ->whereBetween('created_at', [$startDate, $endDate]);
+                  });
+            })
+            ->get()
+            ->map(function ($ann) {
+                $pubDate = $ann->published_at ?? $ann->created_at;
+                return [
+                    'uid' => 'announcement-' . $ann->id,
+                    'id' => $ann->id,
+                    'title' => $ann->title,
+                    'subtitle' => 'Office Announcement',
+                    'category' => 'announcement',
+                    'category_label' => 'Announcement',
+                    'status' => $ann->is_active ? 'active' : 'archived',
+                    'priority' => $ann->priority ?? 'normal',
+                    'date' => $pubDate ? $pubDate->format('Y-m-d') : now()->format('Y-m-d'),
+                    'time' => $pubDate ? $pubDate->format('h:i A') : null,
+                    'actor' => $ann->creator?->full_name ?? 'Admin Office',
+                    'url' => '/admin/announcements',
+                ];
+            });
+        $events = $events->concat($announcements);
+
+        $sortedEvents = $events->sortBy([
+            ['date', 'asc'],
+            ['category', 'asc'],
+        ])->values();
+
+        return response()->json([
+            'month' => $month,
+            'month_label' => $startDate->format('F Y'),
+            'events' => $sortedEvents,
+            'counts' => [
+                'all' => $sortedEvents->count(),
+                'task' => $tasks->count(),
+                'report' => $reports->count(),
+                'distribution' => $distributions->count(),
+                'monitoring' => $monitoringItems->count(),
+                'damage' => $damageRecords->count(),
+                'announcement' => $announcements->count(),
             ],
         ]);
     }

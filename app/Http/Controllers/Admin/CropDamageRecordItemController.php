@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CropDamageRecord;
 use App\Models\CropDamageRecordItem;
 use App\Models\DamageType;
 use App\Models\Farm;

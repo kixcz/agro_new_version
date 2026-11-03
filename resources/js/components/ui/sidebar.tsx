@@ -311,7 +311,7 @@ const SidebarGroup = React.forwardRef<HTMLDivElement, React.ComponentProps<'div'
         <div
             ref={ref}
             data-sidebar="group"
-            className={cn('relative flex w-full min-w-0 flex-col', isCollapsed ? 'px-1 py-1' : 'px-3 py-2', className)}
+            className={cn('relative flex w-full min-w-0 flex-col', isCollapsed ? 'px-1 py-0' : 'px-3 py-2', className)}
             {...props}
         />
     );
@@ -325,7 +325,7 @@ const SidebarGroupLabel = React.forwardRef<HTMLDivElement, React.ComponentProps<
         const Comp = asChild ? Slot : 'div';
 
         if (isCollapsed) {
-            return <div className="my-1 h-px w-full bg-sidebar-border/40" />;
+            return null;
         }
 
         return (

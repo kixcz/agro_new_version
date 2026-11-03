@@ -220,6 +220,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Calendar Route
         Route::get('/calendar', [App\Http\Controllers\Admin\CalendarController::class, 'index'])->name('admin.calendar');
+        Route::get('/calendar/events', [App\Http\Controllers\Admin\CalendarController::class, 'events'])->name('admin.calendar.events');
 
         // Task Management Routes
         Route::middleware(['permission:tasks.view'])->group(function () {

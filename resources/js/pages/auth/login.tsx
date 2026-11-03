@@ -204,53 +204,55 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     >
                                         Join as Farmer →
                                     </button>
-                                ) : (
-                                    <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
-                                        <div className="text-sm font-medium text-center text-gray-700">
-                                            Enter your Local Farmer ID (LFID)
-                                        </div>
-                                        <form onSubmit={handleFarmerJoin} className="space-y-3">
-                                            <div className="relative">
-                                                <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                                                <Input
-                                                    id="farmer-lfid"
-                                                    type="text"
-                                                    value={farmerData.lfid}
-                                                    className="pl-10 h-11"
-                                                    autoComplete="lfid"
-                                                    placeholder="Enter your LFID"
-                                                    autoFocus
-                                                    onChange={(e) => setFarmerData('lfid', e.target.value)}
-                                                />
-                                            </div>
-                                            <InputError message={farmerErrors.lfid} />
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    type="submit"
-                                                    className="flex-1 h-10 bg-emerald-700 hover:bg-emerald-800"
-                                                    disabled={farmerProcessing}
-                                                    size="sm"
-                                                >
-                                                    {farmerProcessing && <LoaderCircle className="mr-2 h-4 w-4 animate-spin text-emerald-400" />}
-                                                    Continue
-                                                </Button>
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    className="flex-1 h-10"
-                                                    onClick={() => {
-                                                        setShowFarmerJoin(false);
-                                                        setFarmerData('lfid', '');
-                                                    }}
-                                                    size="sm"
-                                                >
-                                                    Cancel
-                                                </Button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                )}
+                                ) : null}
                             </form>
+
+                            {showFarmerJoin && (
+                                <div className="mt-5 space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                                    <div className="text-sm font-medium text-center text-gray-700">
+                                        Enter your Local Farmer ID (LFID)
+                                    </div>
+                                    <form onSubmit={handleFarmerJoin} className="space-y-3">
+                                        <div className="relative">
+                                            <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                            <Input
+                                                id="farmer-lfid"
+                                                type="text"
+                                                value={farmerData.lfid}
+                                                className="pl-10 h-11"
+                                                autoComplete="lfid"
+                                                placeholder="Enter your LFID"
+                                                autoFocus
+                                                onChange={(e) => setFarmerData('lfid', e.target.value)}
+                                            />
+                                        </div>
+                                        <InputError message={farmerErrors.lfid} />
+                                        <div className="flex gap-2">
+                                            <Button
+                                                type="submit"
+                                                className="flex-1 h-10 bg-emerald-700 hover:bg-emerald-800"
+                                                disabled={farmerProcessing}
+                                                size="sm"
+                                            >
+                                                {farmerProcessing && <LoaderCircle className="mr-2 h-4 w-4 animate-spin text-emerald-400" />}
+                                                Continue
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="flex-1 h-10"
+                                                onClick={() => {
+                                                    setShowFarmerJoin(false);
+                                                    setFarmerData('lfid', '');
+                                                }}
+                                                size="sm"
+                                            >
+                                                Cancel
+                                            </Button>
+                                        </div>
+                                    </form>
+                                </div>
+                            )}
 
                             <div className="mt-8 text-center text-sm text-gray-600">
                                 Don't have an account?{' '}

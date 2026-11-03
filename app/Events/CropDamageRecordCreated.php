@@ -21,12 +21,8 @@ class CropDamageRecordCreated implements ShouldBroadcast
      */
     public function __construct(CropDamageRecord $cropDamageRecord)
     {
-        $this->cropDamageRecord = $cropDamageRecord->load([
-            'farmer',
-            'farmParcel',
-            'damageCategory',
-        ]);
-        $this->message = "New crop damage record submitted";
+        $this->cropDamageRecord = $cropDamageRecord;
+        $this->message = "New crop damage record folder created: {$cropDamageRecord->name}";
     }
 
     /**
@@ -41,7 +37,7 @@ class CropDamageRecordCreated implements ShouldBroadcast
             new Channel('technicians'),
             new Channel('admin'),
             new Channel('super-admin'),
-            new Channel("crop-damage.{$this->cropDamageRecord->id}"),
+            new Channel("crop-damage.{$this->cropDamageRecord->crop_damage_record_id}"),
         ];
     }
 
@@ -61,12 +57,10 @@ class CropDamageRecordCreated implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            'id' => $this->cropDamageRecord->id,
-            'farmer_name' => $this->cropDamageRecord->farmer?->full_name,
-            'farm_parcel' => $this->cropDamageRecord->farmParcel?->parcel_name,
-            'damage_category' => $this->cropDamageRecord->damageCategory?->name,
-            'severity' => $this->cropDamageRecord->severity,
-            'affected_area' => $this->cropDamageRecord->affected_area,
+            'id' => $this->cropDamageRecord->crop_damage_record_id,
+            'name' => $this->cropDamageRecord->name,
+            'recorded_date' => $this->cropDamageRecord->recorded_date,
+            'notes' => $this->cropDamageRecord->notes,
             'message' => $this->message,
             'timestamp' => now()->toIso8601String(),
         ];

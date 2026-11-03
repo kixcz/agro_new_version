@@ -88,7 +88,7 @@ class FarmerController extends Controller
             'fisherfolkLivelihood',
             'agriYouthLivelihood',
             'income',
-            'farms',
+            'farms.farmParcels',
             'documents',
             'memberships.organization',
             'cropRotations',
@@ -139,7 +139,7 @@ class FarmerController extends Controller
             });
 
         // Get crop damage history - linked via farm_id
-        $farmIds = $farmer->farms->pluck('farm_id')->toArray();
+        $farmIds = $farmer->farms->pluck('id')->toArray();
         $cropDamageHistory = [];
         
         if (!empty($farmIds)) {
@@ -162,9 +162,9 @@ class FarmerController extends Controller
                         'severity' => $item->damage_severity,
                         'status' => $item->status,
                         'area_affected' => $item->cropDamageRecord->area_affected ?? null,
-                        'date_reported' => $item->cropDamageRecord->date_reported,
-                        'barangay' => $item->cropDamageRecord->barangay,
-                        'municipality' => $item->cropDamageRecord->municipality_city,
+                        'date_reported' => $item->cropDamageRecord->recorded_date ?? $item->created_at,
+                        'barangay' => $item->cropDamageRecord->barangay ?? null,
+                        'municipality' => $item->cropDamageRecord->municipality_city ?? null,
                     ];
                 });
         }

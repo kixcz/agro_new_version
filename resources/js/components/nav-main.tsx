@@ -17,7 +17,7 @@ export function NavMain({ title, items }: { title: string; items: NavItem[] }) {
     const isCollapsed = state === 'collapsed';
 
     return (
-        <SidebarGroup className="py-1">
+        <SidebarGroup className={isCollapsed ? 'py-0' : 'py-1'}>
             <SidebarGroupLabel className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                 {title}
             </SidebarGroupLabel>
@@ -35,7 +35,7 @@ export function NavMain({ title, items }: { title: string; items: NavItem[] }) {
                                             asChild
                                             isActive={isActive}
                                             className={cn(
-                                                'h-9 w-9 mx-auto justify-center rounded-lg p-0 transition-colors',
+                                                'h-8 w-8 mx-auto justify-center rounded-lg p-0 transition-colors',
                                                 isActive
                                                     ? 'bg-primary/10 text-primary font-medium dark:bg-primary/20'
                                                     : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground'

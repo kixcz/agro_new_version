@@ -88,7 +88,11 @@ export default function DistributionRecordsIndex() {
     };
 
     const handleCreate = () => {
-        router.post('/admin/distribution-records', formData, {
+        const payload = {
+            ...formData,
+            allocation_policy_id: formData.allocation_policy_id ? formData.allocation_policy_id : null,
+        };
+        router.post('/admin/distribution-records', payload, {
             preserveScroll: false,
             onSuccess: () => { setIsCreateModalOpen(false); resetForm(); setCurrentPage(1); },
         });
@@ -96,7 +100,11 @@ export default function DistributionRecordsIndex() {
 
     const handleUpdate = () => {
         if (!selectedRecord) return;
-        router.put(`/admin/distribution-records/${selectedRecord.id}`, formData, {
+        const payload = {
+            ...formData,
+            allocation_policy_id: formData.allocation_policy_id ? formData.allocation_policy_id : null,
+        };
+        router.put(`/admin/distribution-records/${selectedRecord.id}`, payload, {
             preserveScroll: false,
             onSuccess: () => { setIsEditModalOpen(false); resetForm(); setCurrentPage(1); },
         });

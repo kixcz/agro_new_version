@@ -439,9 +439,9 @@ export function AppSidebar() {
                 )}
             </SidebarHeader>
 
-            <SidebarContent className={isCollapsed ? 'px-1 py-2' : 'px-2 py-3'}>
+            <SidebarContent className={isCollapsed ? 'px-1 py-1.5' : 'px-2 py-3'}>
                 <ScrollArea className="h-full" ref={scrollAreaContainerRef}>
-                    <div className="flex flex-col gap-1 pb-4">
+                    <div className={isCollapsed ? 'flex flex-col gap-0.5 pb-2' : 'flex flex-col gap-1 pb-4'}>
                         {navGroups.map((group) => (
                             <NavMain key={group.title} title={group.title} items={group.items} />
                         ))}
